@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bakery Management System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+</head>
+<body>
+  <div class="container">
+    <div id="login-page" class="page">
+      <div class="login-container">
+        <div class="login-header">
+          <img src="images/logo.png" alt="Bakery Logo" class="logo">
+          <h1>Bakery Management</h1>
+        </div>
+        <div class="login-form">
+          <div class="input-group">
+            <i class="fas fa-user"></i>
+            <input type="text" id="username" placeholder="Username">
+          </div>
+          <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" placeholder="Password">
+          </div>
+          <button id="login-btn" class="btn btn-primary">Login</button>
+          <p id="login-error" class="error-message"></p>
+          <p class="register-link">
+            New user? <a href="#" id="show-register-btn">Register here</a>
+          </p>
+          <div class="test-section" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px;">
+            <button id="test-auth-btn" class="btn btn-secondary" style="width: 100%;">Test Connection</button>
+            <p id="test-result" style="font-size: 0.8rem;"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="main-app" class="page hidden">
+      <header>
+        <div class="header-left">
+          <button id="menu-toggle" class="menu-toggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h1 id="page-title">Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-info">
+            <span id="user-name">User Name</span>
+            <button id="logout-btn" class="btn-icon">
+              <i class="fas fa-sign-out-alt"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+          <img src="images/logo.png" alt="Bakery Logo" class="logo">
+          <h2>Bakery Management</h2>
+        </div>
+        <ul class="sidebar-menu">
+          <li data-page="dashboard" class="active">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </li>
+          <li data-page="inventory">
+            <i class="fas fa-box"></i>
+            <span>Inventory</span>
+          </li>
+          <li data-page="orders">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Orders</span>
+          </li>
+          <li data-page="expenses">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Expenses</span>
+          </li>
+          <li data-page="reports">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reports</span>
+          </li>
+        </ul>
+      </nav>
+
+      <main id="content">
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="content-page">
+          <div class="stats-container">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-shopping-cart"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Today's Orders</h3>
+                <p id="today-orders-count">0</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-rupee-sign"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Today's Sales</h3>
+                <p id="today-sales">₹0</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Today's Expenses</h3>
+                <p id="today-expenses">₹0</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Today's Profit</h3>
+                <p id="today-profit">₹0</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-sections">
+            <div class="dashboard-section">
+              <div class="section-header">
+                <h2>Pending Orders</h2>
+                <button class="btn-link" data-page="orders">View All</button>
+              </div>
+              <div id="pending-orders-list" class="data-list">
+                <div class="empty-state">
+                  <i class="fas fa-shopping-cart"></i>
+                  <p>No pending orders</p>
+                </div>
+              </div>
+            </div>
+            <div class="dashboard-section">
+              <div class="section-header">
+                <h2>Low Stock Items</h2>
+                <button class="btn-link" data-page="inventory">View All</button>
+              </div>
+              <div id="low-stock-list" class="data-list">
+                <div class="empty-state">
+                  <i class="fas fa-box-open"></i>
+                  <p>No low stock items</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inventory Page -->
+        <div id="inventory-page" class="content-page hidden">
+          <div class="page-actions">
+            <div class="search-container">
+              <input type="text" id="inventory-search" placeholder="Search items...">
+              <button class="btn-icon">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+            <div class="filter-container">
+              <select id="inventory-category-filter">
+                <option value="">All Categories</option>
+                <option value="Bread">Bread</option>
+                <option value="Cake">Cake</option>
+                <option value="Pastry">Pastry</option>
+                <option value="Cookie">Cookie</option>
+                <option value="Ingredient">Ingredient</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <button id="add-item-btn" class="btn btn-primary">
+              <i class="fas fa-plus"></i> Add Item
+            </button>
+          </div>
+
+          <div id="inventory-list" class="inventory-grid">
+            <!-- Items will be loaded here -->
+            <div class="empty-state">
+              <i class="fas fa-box-open"></i>
+              <p>No items found</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Orders Page -->
+        <div id="orders-page" class="content-page hidden">
+          <div class="page-actions">
+            <div class="search-container">
+              <input type="text" id="orders-search" placeholder="Search orders...">
+              <button class="btn-icon">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+            <div class="filter-container">
+              <select id="orders-status-filter">
+                <option value="">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Processing">Processing</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+              <input type="date" id="orders-date-filter">
+            </div>
+            <button id="add-order-btn" class="btn btn-primary">
+              <i class="fas fa-plus"></i> New Order
+            </button>
+          </div>
+
+          <div class="toggle-container">
+            <div class="toggle-option active" data-view="all">All Orders</div>
+            <div class="toggle-option" data-view="today">Today's Orders</div>
+          </div>
+
+          <div id="orders-list" class="orders-list">
+            <!-- Orders will be loaded here -->
+            <div class="empty-state">
+              <i class="fas fa-shopping-cart"></i>
+              <p>No orders found</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expenses Page -->
+        <div id="expenses-page" class="content-page hidden">
+          <div class="page-actions">
+            <div class="search-container">
+              <input type="text" id="expenses-search" placeholder="Search expenses...">
+              <button class="btn-icon">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+            <div class="filter-container">
+              <select id="expenses-category-filter">
+                <option value="">All Categories</option>
+                <option value="Ingredients">Ingredients</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Rent">Rent</option>
+                <option value="Salaries">Salaries</option>
+                <option value="Equipment">Equipment</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Transport">Transport</option>
+                <option value="Miscellaneous">Miscellaneous</option>
+              </select>
+              <input type="date" id="expenses-date-filter">
+            </div>
+            <button id="add-expense-btn" class="btn btn-primary">
+              <i class="fas fa-plus"></i> Add Expense
+            </button>
+          </div>
+
+          <div class="toggle-container">
+            <div class="toggle-option active" data-view="all">All Expenses</div>
+            <div class="toggle-option" data-view="today">Today's Expenses</div>
+          </div>
+
+          <div id="expenses-list" class="expenses-list">
+            <!-- Expenses will be loaded here -->
+            <div class="empty-state">
+              <i class="fas fa-money-bill-wave"></i>
+              <p>No expenses found</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports Page -->
+        <div id="reports-page" class="content-page hidden">
+          <div class="report-types">
+            <div class="report-card" data-report="daily">
+              <div class="report-icon">
+                <i class="fas fa-calendar-day"></i>
+              </div>
+              <div class="report-info">
+                <h3>Daily Report</h3>
+                <p>View sales and expenses for a specific day</p>
+              </div>
+            </div>
+            <div class="report-card" data-report="range">
+              <div class="report-icon">
+                <i class="fas fa-calendar-week"></i>
+              </div>
+              <div class="report-info">
+                <h3>Date Range Report</h3>
+                <p>View data between two dates</p>
+              </div>
+            </div>
+            <div class="report-card" data-report="inventory">
+              <div class="report-icon">
+                <i class="fas fa-boxes"></i>
+              </div>
+              <div class="report-info">
+                <h3>Inventory Report</h3>
+                <p>View current inventory status</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="report-content" class="report-content">
+            <div class="empty-state">
+              <i class="fas fa-chart-bar"></i>
+              <p>Select a report type to view</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <!-- Item Modal -->
+    <div id="item-modal" class="modal hidden">
+      <div class="modal-header">
+        <h2 id="item-modal-title">Add New Item</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="item-form">
+          <input type="hidden" id="item-id">
+          <div class="form-group">
+            <label for="item-name">Item Name</label>
+            <input type="text" id="item-name" required>
+          </div>
+          <div class="form-group">
+            <label for="item-category">Category</label>
+            <select id="item-category" required>
+              <option value="">Select Category</option>
+              <option value="Bread">Bread</option>
+              <option value="Cake">Cake</option>
+              <option value="Pastry">Pastry</option>
+              <option value="Cookie">Cookie</option>
+              <option value="Ingredient">Ingredient</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="item-price">Selling Price (₹)</label>
+              <input type="number" id="item-price" min="0" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label for="item-cost">Cost Price (₹)</label>
+              <input type="number" id="item-cost" min="0" step="0.01" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="item-stock">Stock Quantity</label>
+              <input type="number" id="item-stock" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="item-unit">Unit</label>
+              <select id="item-unit" required>
+                <option value="">Select Unit</option>
+                <option value="piece">Piece</option>
+                <option value="dozen">Dozen</option>
+                <option value="kg">KG</option>
+                <option value="g">Gram</option>
+                <option value="lb">LB</option>
+                <option value="oz">Oz</option>
+                <option value="l">Liter</option>
+                <option value="ml">ML</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="item-min-stock">Minimum Stock Level</label>
+            <input type="number" id="item-min-stock" min="0" value="5">
+          </div>
+          <div class="form-group">
+            <label for="item-description">Description</label>
+            <textarea id="item-description" rows="3"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Item</button>
+            <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Order Modal -->
+    <div id="order-modal" class="modal hidden">
+      <div class="modal-header">
+        <h2 id="order-modal-title">Create New Order</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="order-form">
+          <input type="hidden" id="order-id">
+          <div class="form-section">
+            <h3>Customer Details</h3>
+            <div class="form-group">
+              <label for="customer-name">Customer Name</label>
+              <input type="text" id="customer-name" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="customer-phone">Phone Number</label>
+                <input type="text" id="customer-phone">
+              </div>
+              <div class="form-group">
+                <label for="delivery-date">Delivery Date</label>
+                <input type="date" id="delivery-date">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="customer-address">Address</label>
+              <textarea id="customer-address" rows="2"></textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Order Items</h3>
+            <div id="order-items-container">
+              <!-- Order items will be added here -->
+            </div>
+            <button type="button" id="add-order-item" class="btn btn-secondary">
+              <i class="fas fa-plus"></i> Add Item
+            </button>
+          </div>
+
+          <div class="form-section">
+            <h3>Order Summary</h3>
+            <div class="order-summary">
+              <div class="summary-row">
+                <span>Total Items:</span>
+                <span id="order-total-items">0</span>
+              </div>
+              <div class="summary-row">
+                <span>Total Amount:</span>
+                <span id="order-total-amount">₹0.00</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="payment-method">Payment Method</label>
+                <select id="payment-method" required>
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="payment-status">Payment Status</label>
+                <select id="payment-status" required>
+                  <option value="Paid">Paid</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Partial">Partial</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="order-notes">Notes</label>
+              <textarea id="order-notes" rows="2"></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Order</button>
+            <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expense-modal" class="modal hidden">
+      <div class="modal-header">
+        <h2 id="expense-modal-title">Add New Expense</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="expense-form">
+          <input type="hidden" id="expense-id">
+          <div class="form-group">
+            <label for="expense-title">Expense Title</label>
+            <input type="text" id="expense-title" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expense-amount">Amount (₹)</label>
+              <input type="number" id="expense-amount" min="0" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label for="expense-date">Date</label>
+              <input type="date" id="expense-date" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expense-category">Category</label>
+              <select id="expense-category" required>
+                <option value="">Select Category</option>
+                <option value="Ingredients">Ingredients</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Rent">Rent</option>
+                <option value="Salaries">Salaries</option>
+                <option value="Equipment">Equipment</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Transport">Transport</option>
+                <option value="Miscellaneous">Miscellaneous</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="expense-payment">Payment Method</label>
+              <select id="expense-payment" required>
+                <option value="Cash">Cash</option>
+                <option value="Card">Card</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="UPI">UPI</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="expense-paid-to">Paid To</label>
+            <input type="text" id="expense-paid-to">
+          </div>
+          <div class="form-group">
+            <label for="expense-description">Description</label>
+            <textarea id="expense-description" rows="3"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Expense</button>
+            <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal hidden">
+      <div class="modal-header">
+        <h2 id="confirm-modal-title">Confirm Action</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-modal-message">Are you sure you want to perform this action?</p>
+        <div class="form-actions">
+          <button id="confirm-modal-yes" class="btn btn-danger">Yes</button>
+          <button class="btn btn-secondary modal-close">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alert-modal" class="modal hidden">
+      <div class="modal-header">
+        <h2 id="alert-modal-title">Alert</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="alert-modal-message"></p>
+        <div class="form-actions center">
+          <button class="btn btn-primary modal-close">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="registration-modal" class="modal hidden">
+      <div class="modal-header">
+        <h2>Register New User</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="registration-form">
+          <div class="form-group">
+            <label for="reg-username">Username</label>
+            <input type="text" id="reg-username" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-name">Full Name</label>
+            <input type="text" id="reg-name" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-confirm-password">Confirm Password</label>
+            <input type="password" id="reg-confirm-password" required>
+          </div>
+          <div class="form-group" id="admin-code-container">
+            <label for="reg-admin-code">Admin Code (optional)</label>
+            <input type="password" id="reg-admin-code" placeholder="Leave empty for staff role">
+            <p class="form-hint">Enter admin code only if you're authorized to create an admin account</p>
+          </div>
+          <p id="registration-error" class="error-message"></p>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Register</button>
+            <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Item Template (Hidden) -->
+  <template id="order-item-template">
+    <div class="order-item">
+      <div class="order-item-header">
+        <select class="order-item-select" required>
+          <option value="">Select an item</option>
+        </select>
+        <button type="button" class="btn-icon remove-order-item">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="order-item-details">
+        <div class="order-item-detail">
+          <label>Quantity</label>
+          <input type="number" class="order-item-quantity" min="1" value="1" required>
+        </div>
+        <div class="order-item-detail">
+          <label>Price (₹)</label>
+          <input type="number" class="order-item-price" min="0" step="0.01" required disabled>
+        </div>
+        <div class="order-item-detail">
+          <label>Subtotal (₹)</label>
+          <input type="text" class="order-item-subtotal" readonly>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/inventory.js"></script>
+  <script src="js/orders.js"></script>
+  <script src="js/expenses.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html> 

@@ -1,0 +1,60 @@
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize UI
+  UI.init();
+  
+  // Enter key for login
+  document.getElementById('password').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('login-btn').click();
+    }
+  });
+  
+  // Enter key for registration form (on last field)
+  document.getElementById('reg-admin-code').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      const registrationForm = document.getElementById('registration-form');
+      const submitButton = registrationForm.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.click();
+      }
+    }
+  });
+  
+  // Test auth connection
+  const testAuthBtn = document.getElementById('test-auth-btn');
+  if (testAuthBtn) {
+    testAuthBtn.addEventListener('click', async () => {
+      const testResult = document.getElementById('test-result');
+      testResult.textContent = 'Testing connection...';
+      testResult.style.color = '#666';
+      
+      try {
+        const result = await Auth.testAuth();
+        if (result.success) {
+          testResult.textContent = 'Connection successful! Server is responding.';
+          testResult.style.color = 'green';
+        } else {
+          testResult.textContent = `Test failed: ${result.message}`;
+          testResult.style.color = 'red';
+        }
+      } catch (error) {
+        testResult.textContent = `Error: ${error.message}`;
+        testResult.style.color = 'red';
+      }
+    });
+  }
+  
+  // Initialize event listeners for modal close
+  const closeButtons = document.querySelectorAll('.modal-close');
+  closeButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Find the closest modal parent
+      const modal = button.closest('.modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        document.getElementById('modal-overlay').classList.add('hidden');
+      }
+    });
+  });
+}); 

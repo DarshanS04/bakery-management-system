@@ -1,31 +1,22 @@
 # Bakery Management System
 
-A full-stack web application for managing a bakery business, including inventory, orders, expenses, and reports.
+A full-stack MERN application for managing bakery operations including inventory, orders, expenses, and reports.
 
 ## Features
 
-- **User Authentication**: Secure login system with role-based access control
-- **Dashboard**: Overview of daily sales, orders, expenses, and low stock alerts
-- **Inventory Management**: Add, edit, and track bakery items and ingredients
-- **Order Management**: Create and manage customer orders with status tracking
-- **Expense Tracking**: Record and categorize business expenses
-- **Reports**: Generate daily, date range, and inventory reports
+- Dashboard with daily sales and metrics
+- Inventory management with stock tracking
+- Order processing and status updates
+- Expense tracking and categorization
+- Reports and analytics
 
-## Technology Stack
+## Prerequisites
 
-- **Backend**: Node.js, Express.js, MongoDB (Mongoose)
-- **Frontend**: Vanilla HTML, CSS, JavaScript (no frameworks)
-- **Authentication**: JWT (JSON Web Tokens)
-- **Database**: MongoDB
+- Node.js (v14 or higher)
+- MongoDB (local or Atlas)
+- Web browser (Chrome, Firefox, Edge)
 
-## Setup Instructions
-
-### Prerequisites
-
-- Node.js (v14 or later)
-- MongoDB (local or cloud instance)
-
-### Installation
+## Installation
 
 1. Clone the repository:
    ```
@@ -43,19 +34,40 @@ A full-stack web application for managing a bakery business, including inventory
    PORT=5000
    MONGO_URI=mongodb://localhost:27017/bakery-management
    JWT_SECRET=your_jwt_secret_key_here
-   NODE_ENV=development
    ```
 
-4. Start the development server:
-   ```
-   npm run dev
-   ```
+## Running the Application
 
-5. Open your browser and navigate to `http://localhost:5000`
+### Option 1: Using npm
 
-### Default Admin Account
+```
+npm run dev
+```
 
-After starting the server for the first time, you can create an admin account using the registration API or by using the MongoDB shell to insert a user document.
+### Option 2: Using the batch file (Windows)
+
+Simply double-click the `start.bat` file in the root directory.
+
+## Accessing the Application
+
+Once the server is running, open your web browser and navigate to:
+
+```
+http://localhost:5000
+```
+
+**Important:** Do not open the HTML files directly from the file system, as this will cause CORS and API connection errors. Always access the application through the server URL.
+
+## Default Login
+
+Username: admin  
+Password: admin123
+
+## Troubleshooting
+
+- If you encounter database connection issues, ensure MongoDB is running
+- If you see CORS errors, make sure you're accessing the app through the server URL
+- For any missing dependencies, run `npm install` again
 
 ## Project Structure
 
