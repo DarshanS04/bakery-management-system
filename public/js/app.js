@@ -21,6 +21,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
+  // Page Visibility API - Handle when user returns to the page
+  document.addEventListener('visibilitychange', () => {
+    // If user is returning to the page and is authenticated, reinitialize modules
+    if (document.visibilityState === 'visible' && Auth.isAuthenticated()) {
+      console.log('User returned to the page, reinitializing modules...');
+      // Reinitialize all modules to restore event listeners
+      UI.initializeModules();
+    }
+  });
+  
   // Test auth connection
   const testAuthBtn = document.getElementById('test-auth-btn');
   if (testAuthBtn) {

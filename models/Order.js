@@ -4,7 +4,11 @@ const OrderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    default: function() {
+      // This is a placeholder, real value will be set in pre-save
+      return 'ORD' + new Date().getTime();
+    }
   },
   customer: {
     name: {

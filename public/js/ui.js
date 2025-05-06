@@ -302,6 +302,7 @@ const UI = (() => {
     showMainApp,
     navigateTo,
     updateUserInfo,
-    hideAllModals
+    hideAllModals,
+    initializeModules
   };
 })(); 
