@@ -3,6 +3,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize UI
   UI.init();
   
+  // Hash navigation handler
+  function handleHash() {
+    const hash = window.location.hash.substring(1); // Remove the # character
+    if (hash && Auth.isAuthenticated()) {
+      // Map hash to a page if it exists
+      switch(hash) {
+        case 'inventory':
+        case 'orders':
+        case 'expenses':
+        case 'reports':
+          UI.navigateTo(hash);
+          break;
+        default:
+          UI.navigateTo('dashboard');
+      }
+    }
+  }
+  
+  // Handle hash change
+  window.addEventListener('hashchange', handleHash);
+  
+  // Handle hash on initial page load
+  handleHash();
+  
   // Enter key for login
   document.getElementById('password').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {

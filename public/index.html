@@ -61,28 +61,15 @@
           <img src="images/logo.png" alt="Bakery Logo" class="logo">
           <h2>Bakery Management</h2>
         </div>
-        <ul class="sidebar-menu">
-          <li data-page="dashboard" class="active">
-            <i class="fas fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-          </li>
-          <li data-page="inventory">
-            <i class="fas fa-box"></i>
-            <span>Inventory</span>
-          </li>
-          <li data-page="orders">
-            <i class="fas fa-shopping-cart"></i>
-            <span>Orders</span>
-          </li>
-          <li data-page="expenses">
-            <i class="fas fa-money-bill-wave"></i>
-            <span>Expenses</span>
-          </li>
-          <li data-page="reports">
-            <i class="fas fa-chart-bar"></i>
-            <span>Reports</span>
-          </li>
-        </ul>
+        <div class="sidebar-section">
+          <h3>Management</h3>
+          <ul>
+            <li><a href="#dashboard" class="sidebar-link" data-tab="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="#inventory" class="sidebar-link" data-tab="inventory"><i class="fas fa-box"></i> Inventory</a></li>
+            <li><a href="#orders" class="sidebar-link" data-tab="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+            <li><a href="#expenses" class="sidebar-link" data-tab="expenses"><i class="fas fa-money-bill-wave"></i> Expenses</a></li>
+          </ul>
+        </div>
       </nav>
 
       <main id="content">
@@ -592,11 +579,36 @@
             <label for="reg-confirm-password">Confirm Password</label>
             <input type="password" id="reg-confirm-password" required>
           </div>
-          <div class="form-group" id="admin-code-container">
-            <label for="reg-admin-code">Admin Code (optional)</label>
-            <input type="password" id="reg-admin-code" placeholder="Leave empty for staff role">
+          <div class="form-group">
+            <label for="reg-role">Role</label>
+            <select id="reg-role" required>
+              <option value="customer" selected>Customer</option>
+              <option value="staff">Staff</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          
+          <!-- Customer fields -->
+          <div class="form-group customer-field">
+            <label for="reg-email">Email</label>
+            <input type="email" id="reg-email" placeholder="Enter your email">
+          </div>
+          <div class="form-group customer-field">
+            <label for="reg-phone">Phone</label>
+            <input type="tel" id="reg-phone" placeholder="Enter your phone number">
+          </div>
+          <div class="form-group customer-field">
+            <label for="reg-address">Address</label>
+            <textarea id="reg-address" placeholder="Enter your address" rows="3"></textarea>
+          </div>
+          
+          <!-- Admin code field should be conditionally shown -->
+          <div class="form-group admin-field" style="display: none;">
+            <label for="reg-admin-code">Admin Code</label>
+            <input type="password" id="reg-admin-code" placeholder="Enter admin code">
             <p class="form-hint">Enter admin code only if you're authorized to create an admin account</p>
           </div>
+          
           <p id="registration-error" class="error-message"></p>
           <div class="form-actions">
             <button type="submit" class="btn btn-primary">Register</button>
@@ -643,7 +655,163 @@
   <script src="js/orders.js"></script>
   <script src="js/expenses.js"></script>
   <script src="js/reports.js"></script>
+  <script src="js/customer.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/app.js"></script>
+
+  <script>
+    // Registration form role toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const regRole = document.getElementById('reg-role');
+      if (regRole) {
+        regRole.addEventListener('change', function() {
+          const adminFields = document.querySelectorAll('.admin-field');
+          const customerFields = document.querySelectorAll('.customer-field');
+          
+          if (this.value === 'admin') {
+            adminFields.forEach(field => field.style.display = 'block');
+            customerFields.forEach(field => field.style.display = 'none');
+          } else if (this.value === 'customer') {
+            adminFields.forEach(field => field.style.display = 'none');
+            customerFields.forEach(field => field.style.display = 'block');
+          } else {
+            adminFields.forEach(field => field.style.display = 'none');
+            customerFields.forEach(field => field.style.display = 'none');
+          }
+        });
+        
+        // Initialize the form with the default selected role
+        regRole.dispatchEvent(new Event('change'));
+        
+        // Ensure customer option is available
+        const customerOption = [...regRole.options].find(opt => opt.value === 'customer');
+        if (!customerOption) {
+          const option = document.createElement('option');
+          option.value = 'customer';
+          option.text = 'Customer';
+          option.selected = true;
+          regRole.prepend(option);
+          regRole.dispatchEvent(new Event('change'));
+        }
+      }
+      
+      // Login form handler with role-based redirect
+      const loginForm = document.getElementById('login-btn');
+      if (loginForm) {
+        loginForm.addEventListener('click', async function(e) {
+          e.preventDefault();
+          
+          const username = document.getElementById('username').value;
+          const password = document.getElementById('password').value;
+          const result = await Auth.login(username, password);
+          
+          if (result.success) {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            // Get user and check role
+            const user = Auth.getUser();
+            
+            // Initialize appropriate dashboard based on user role
+            if (user.role === 'customer') {
+              // Initialize customer dashboard
+              Customer.init();
+              window.location.hash = 'customer-dashboard';
+            } else {
+              // Check for hash in URL and navigate if present
+              const hash = window.location.hash.substring(1);
+              if (hash && ['dashboard', 'inventory', 'orders', 'expenses', 'reports'].includes(hash)) {
+                UI.navigateTo(hash);
+              } else {
+                // Default to dashboard
+                Dashboard.init();
+                UI.showTab('dashboard');
+                history.pushState(null, '', '#dashboard');
+              }
+            }
+            
+            // Update user name in header
+            document.getElementById('user-name').textContent = user.name;
+          } else {
+            UI.showNotification(result.message || 'Login failed. Check your credentials.', 'error');
+          }
+        });
+      }
+      
+      // Registration form handler
+      const registrationForm = document.getElementById('registration-form');
+      if (registrationForm) {
+        registrationForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const username = document.getElementById('reg-username').value;
+          const password = document.getElementById('reg-password').value;
+          const confirmPassword = document.getElementById('reg-confirm-password').value;
+          const name = document.getElementById('reg-name').value;
+          const role = document.getElementById('reg-role').value;
+          
+          // Validate passwords match
+          if (password !== confirmPassword) {
+            document.getElementById('registration-error').textContent = 'Passwords do not match';
+            return;
+          }
+          
+          // Prepare user data
+          const userData = { username, password, name, role };
+          
+          // Add admin code if admin role
+          if (role === 'admin') {
+            userData.adminCode = document.getElementById('reg-admin-code').value;
+          }
+          
+          // Add customer fields if customer role
+          if (role === 'customer') {
+            userData.email = document.getElementById('reg-email').value;
+            userData.phone = document.getElementById('reg-phone').value;
+            userData.address = document.getElementById('reg-address').value;
+          }
+          
+          const result = await Auth.register(userData);
+          
+          if (result.success) {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            // Get user and check role
+            const user = Auth.getUser();
+            
+            // Initialize appropriate dashboard based on user role
+            if (user.role === 'customer') {
+              // Initialize customer dashboard
+              Customer.init();
+              window.location.hash = 'customer-dashboard';
+            } else {
+              // Check for hash in URL and navigate if present
+              const hash = window.location.hash.substring(1);
+              if (hash && ['dashboard', 'inventory', 'orders', 'expenses', 'reports'].includes(hash)) {
+                UI.navigateTo(hash);
+              } else {
+                // Default to dashboard
+                Dashboard.init();
+                UI.showTab('dashboard');
+                history.pushState(null, '', '#dashboard');
+              }
+            }
+            
+            // Update user name in header
+            document.getElementById('user-name').textContent = user.name;
+            
+            // Close the registration modal
+            document.getElementById('registration-modal').classList.add('hidden');
+            document.getElementById('modal-overlay').classList.add('hidden');
+            
+            UI.showNotification('Registration successful!', 'success');
+          } else {
+            document.getElementById('registration-error').textContent = result.message || 'Registration failed.';
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html> 

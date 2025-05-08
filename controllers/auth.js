@@ -13,7 +13,7 @@ const generateToken = (id) => {
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { username, password, name, role, adminCode } = req.body;
+    const { username, password, name, role, adminCode, email, phone, address } = req.body;
 
     // Check if user already exists
     const userExists = await User.findOne({ username });
@@ -37,13 +37,21 @@ exports.register = async (req, res) => {
       }
     }
 
-    // Create user
-    const user = await User.create({
+    // Create user data object
+    const userData = {
       username,
       password,
       name,
-      role: role || 'staff'
-    });
+      role: role || 'customer'
+    };
+    
+    // Add customer fields if provided
+    if (email) userData.email = email;
+    if (phone) userData.phone = phone;
+    if (address) userData.address = address;
+
+    // Create the user
+    const user = await User.create(userData);
 
     // Generate token
     const token = generateToken(user._id);
@@ -60,7 +68,10 @@ exports.register = async (req, res) => {
         _id: user._id,
         username: user.username,
         name: user.name,
-        role: user.role
+        role: user.role,
+        email: user.email,
+        phone: user.phone,
+        address: user.address
       },
       token
     });
@@ -113,7 +124,10 @@ exports.login = async (req, res) => {
         _id: user._id,
         username: user.username,
         name: user.name,
-        role: user.role
+        role: user.role,
+        email: user.email,
+        phone: user.phone,
+        address: user.address
       },
       token
     });
@@ -147,13 +161,17 @@ exports.logout = (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
+    
     res.status(200).json({
       success: true,
       user: {
         _id: user._id,
         username: user.username,
         name: user.name,
-        role: user.role
+        role: user.role,
+        email: user.email,
+        phone: user.phone,
+        address: user.address
       }
     });
   } catch (error) {

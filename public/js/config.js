@@ -27,5 +27,11 @@ const API_ENDPOINTS = {
   dashboardSummary: `${API_BASE_URL}/reports/dashboard`,
   dailyReport: `${API_BASE_URL}/reports/daily`,
   dateRangeReport: `${API_BASE_URL}/reports/range`,
-  inventoryReport: `${API_BASE_URL}/reports/inventory`
+  inventoryReport: `${API_BASE_URL}/reports/inventory`,
+  
+  // Customer
+  customerDashboard: `${API_BASE_URL}/customer/dashboard`,
+  customerOrders: `${API_BASE_URL}/customer/orders`,
+  customerProfile: `${API_BASE_URL}/customer/profile`,
+  customerFeedback: `${API_BASE_URL}/customer/feedback`
 }; 

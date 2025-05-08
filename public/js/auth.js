@@ -181,7 +181,7 @@ const Auth = (() => {
         console.log('Attempting registration with:', { 
           username: userData.username, 
           name: userData.name,
-          hasRole: !!userData.role 
+          role: userData.role || 'staff'
         });
         
         const response = await fetch(API_ENDPOINTS.register, {
@@ -227,22 +227,29 @@ const Auth = (() => {
       }
     },
     
-    // Show registration modal
+    // Show registration modal - this just uses global hideModal function
     showRegistrationModal: () => {
-      document.getElementById('modal-overlay').classList.remove('hidden');
-      document.getElementById('registration-modal').classList.remove('hidden');
+      const modal = document.getElementById('registration-modal');
+      const overlay = document.getElementById('modal-overlay');
+      if (modal && overlay) {
+        overlay.classList.remove('hidden');
+        modal.classList.remove('hidden');
+      }
+      
+      // Clear previous form data
+      const form = document.getElementById('registration-form');
+      if (form) {
+        form.reset();
+        const errorMsg = document.getElementById('registration-error');
+        if (errorMsg) {
+          errorMsg.textContent = '';
+        }
+      }
     },
     
-    // Check if user is authenticated
+    // Utility methods
     isAuthenticated,
-    
-    // Get current user
     getUser,
-    
-    // Get authentication token
-    getToken,
-    
-    // Clear authentication
-    clearAuth
+    getToken
   };
 })(); 

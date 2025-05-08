@@ -12,6 +12,7 @@ const itemRoutes = require('./routes/items');
 const orderRoutes = require('./routes/orders');
 const expenseRoutes = require('./routes/expenses');
 const reportRoutes = require('./routes/reports');
+const customerRoutes = require('./routes/customer');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -40,6 +41,7 @@ app.use('/api/items', itemRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/customer', customerRoutes);
 
 // Simple test routes for debugging
 app.get('/api/test', (req, res) => {

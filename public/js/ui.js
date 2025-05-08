@@ -54,7 +54,7 @@ const UI = (() => {
     // Show registration form button
     showRegisterBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      Auth.showRegistrationModal();
+      showModal('registration-modal');
     });
     
     // Registration form
@@ -80,7 +80,7 @@ const UI = (() => {
     document.querySelectorAll('.btn-link[data-page]').forEach(btn => {
       btn.addEventListener('click', () => {
         const page = btn.getAttribute('data-page');
-        navigateTo(page);
+        window.location.hash = page; // This will trigger the hashchange event
       });
     });
     
@@ -213,7 +213,7 @@ const UI = (() => {
       initializeModules();
       
       // Show success message
-      Utils.showAlert('Success', 'Registration successful! Welcome to Bakery Management System.');
+      showNotification('Registration successful! Welcome to Bakery Management System.', 'success');
     } else {
       // Show error
       registrationForm.errorMsg.textContent = result.message;
@@ -239,32 +239,49 @@ const UI = (() => {
     sidebar.classList.toggle('open');
   };
   
-  // Navigate to page
+  // Add a new method to show specific tabs
+  const showTab = (tabId) => {
+    // Hide all content pages
+    document.querySelectorAll('.content-page').forEach(page => {
+      page.classList.add('hidden');
+    });
+    
+    // Show the requested tab
+    const tabElement = document.getElementById(tabId);
+    if (tabElement) {
+      tabElement.classList.remove('hidden');
+      
+      // Update page title
+      const title = tabId.split('-').map(capitalizeFirstLetter).join(' ');
+      header.pageTitle.textContent = title;
+      
+      // Update active state in sidebar
+      document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('data-tab') === tabId) {
+          link.classList.add('active');
+        }
+      });
+    }
+  };
+  
+  // Update the navigateTo method to use showTab
   const navigateTo = (page) => {
-    // Update active sidebar item
-    sidebarItems.forEach(item => {
-      if (item.getAttribute('data-page') === page) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
-      }
-    });
+    // Update URL hash without triggering hashchange event
+    const currentHash = window.location.hash.substring(1);
+    if (currentHash !== page) {
+      history.pushState(null, '', `#${page}`);
+    }
     
-    // Update page title
-    header.pageTitle.textContent = capitalizeFirstLetter(page);
+    showTab(page + '-page');
     
-    // Show selected page
-    contentPages.forEach(contentPage => {
-      if (contentPage.id === `${page}-page`) {
-        contentPage.classList.remove('hidden');
-      } else {
-        contentPage.classList.add('hidden');
-      }
-    });
-    
-    // Close sidebar on mobile
-    if (window.innerWidth <= 600) {
-      sidebar.classList.remove('open');
+    // Handle special case initializations
+    if (page === 'inventory' && typeof Inventory !== 'undefined') {
+      Inventory.refreshItemsList();
+    } else if (page === 'orders' && typeof Orders !== 'undefined') {
+      Orders.refreshOrdersList();
+    } else if (page === 'expenses' && typeof Expenses !== 'undefined') {
+      Expenses.refreshExpensesList();
     }
   };
   
@@ -290,19 +307,126 @@ const UI = (() => {
     });
   };
   
+  // Hide specific modal
+  const hideModal = (modalId) => {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.add('hidden');
+      modalOverlay.classList.add('hidden');
+    }
+  };
+  
+  // Show modal
+  const showModal = (modalId) => {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modalOverlay.classList.remove('hidden');
+      modal.classList.remove('hidden');
+    }
+  };
+  
+  // Show notification
+  const showNotification = (message, type = 'info') => {
+    // Create notification element if it doesn't exist
+    let notification = document.getElementById('notification');
+    if (!notification) {
+      notification = document.createElement('div');
+      notification.id = 'notification';
+      notification.className = 'notification';
+      document.body.appendChild(notification);
+      
+      // Add styles if not already in CSS
+      const style = document.createElement('style');
+      style.textContent = `
+        .notification {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          padding: 10px 15px;
+          border-radius: 4px;
+          color: white;
+          font-weight: 500;
+          z-index: 9999;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          transition: all 0.3s ease;
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        .notification.show {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .notification.success { background-color: #4caf50; }
+        .notification.error { background-color: #f44336; }
+        .notification.info { background-color: #2196f3; }
+        .notification.warning { background-color: #ff9800; }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Set notification type and message
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    
+    // Show notification
+    setTimeout(() => notification.classList.add('show'), 10);
+    
+    // Hide notification after 3 seconds
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  };
+  
+  // Confirm action with a dialog
+  const confirmAction = (title, message, callback) => {
+    // Set confirm modal content
+    document.getElementById('confirm-modal-title').textContent = title;
+    document.getElementById('confirm-modal-message').textContent = message;
+    
+    // Show confirm modal
+    showModal('confirm-modal');
+    
+    // Set up yes button event
+    const yesBtn = document.getElementById('confirm-modal-yes');
+    const existingHandler = yesBtn._clickHandler;
+    
+    // Remove existing handler if present
+    if (existingHandler) {
+      yesBtn.removeEventListener('click', existingHandler);
+    }
+    
+    // Add new handler
+    yesBtn._clickHandler = () => {
+      hideModal('confirm-modal');
+      callback();
+    };
+    
+    yesBtn.addEventListener('click', yesBtn._clickHandler);
+  };
+  
   // Helper function to capitalize first letter
   const capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
   
-  // Return public methods
+  // Public methods
   return {
     init,
     showLoginPage,
     showMainApp,
     navigateTo,
-    updateUserInfo,
+    showTab,
+    showModal,
+    hideModal,
     hideAllModals,
-    initializeModules
+    showNotification,
+    initializeModules,
+    confirmAction
   };
-})(); 
+})();
+
+// Add the hideModal function globally to fix the error
+function hideModal(modalId) {
+  UI.hideModal(modalId);
+} 

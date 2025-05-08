@@ -24,6 +24,6 @@ router
 
 router
   .route('/:id/stock')
-  .patch(protect, updateStock);
+  .patch(protect, authorize('admin', 'staff'), updateStock);
 
 module.exports = router; 

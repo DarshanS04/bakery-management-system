@@ -21,8 +21,21 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'staff'],
-    default: 'staff'
+    enum: ['admin', 'staff', 'customer'],
+    default: 'customer'
+  },
+  email: {
+    type: String,
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      'Please add a valid email'
+    ]
+  },
+  phone: {
+    type: String
+  },
+  address: {
+    type: String
   },
   active: {
     type: Boolean,
