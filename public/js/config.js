@@ -28,10 +28,12 @@ const API_ENDPOINTS = {
   dailyReport: `${API_BASE_URL}/reports/daily`,
   dateRangeReport: `${API_BASE_URL}/reports/range`,
   inventoryReport: `${API_BASE_URL}/reports/inventory`,
+  feedbackReport: `${API_BASE_URL}/reports/feedback`,
   
   // Customer
   customerDashboard: `${API_BASE_URL}/customer/dashboard`,
   customerOrders: `${API_BASE_URL}/customer/orders`,
+  customerOrderDetails: (id) => `${API_BASE_URL}/customer/orders/${id}`,
   customerProfile: `${API_BASE_URL}/customer/profile`,
   customerFeedback: `${API_BASE_URL}/customer/feedback`
 }; 

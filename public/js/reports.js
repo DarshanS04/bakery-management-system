@@ -42,6 +42,9 @@ const Reports = (() => {
         case 'inventory':
           await loadInventoryReport();
           break;
+        case 'feedback':
+          await loadFeedbackReport();
+          break;
         default:
           reportContent.innerHTML = `
             <div class="empty-state">
@@ -415,6 +418,225 @@ const Reports = (() => {
         </div>
       `;
     }
+  };
+  
+  // Load feedback report
+  const loadFeedbackReport = async () => {
+    // Create date inputs for filtering feedback
+    const today = new Date();
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    
+    const todayFormatted = today.toISOString().split('T')[0];
+    const oneMonthAgoFormatted = oneMonthAgo.toISOString().split('T')[0];
+    
+    reportContent.innerHTML = `
+      <div class="report-header">
+        <h2>Customer Feedback Report</h2>
+        <div class="report-filters">
+          <div class="filter-group">
+            <label>Date Range:</label>
+            <input type="date" id="feedback-start-date" value="${oneMonthAgoFormatted}">
+            <span>to</span>
+            <input type="date" id="feedback-end-date" value="${todayFormatted}">
+          </div>
+          <div class="filter-group">
+            <label>Rating:</label>
+            <select id="feedback-rating-filter">
+              <option value="">All Ratings</option>
+              <option value="5">5 Stars</option>
+              <option value="4">4 Stars</option>
+              <option value="3">3 Stars</option>
+              <option value="2">2 Stars</option>
+              <option value="1">1 Star</option>
+            </select>
+          </div>
+          <button id="generate-feedback-report" class="btn btn-primary">Generate Report</button>
+        </div>
+      </div>
+      <div id="feedback-report-content">
+        <div class="empty-state">
+          <i class="fas fa-star"></i>
+          <p>Select filters and generate the feedback report</p>
+        </div>
+      </div>
+    `;
+    
+    // Add event listener to the generate button
+    document.getElementById('generate-feedback-report').addEventListener('click', async () => {
+      const startDate = document.getElementById('feedback-start-date').value;
+      const endDate = document.getElementById('feedback-end-date').value;
+      const ratingFilter = document.getElementById('feedback-rating-filter').value;
+      
+      await generateFeedbackReport(startDate, endDate, ratingFilter);
+    });
+  };
+  
+  // Generate feedback report
+  const generateFeedbackReport = async (startDate, endDate, ratingFilter) => {
+    const feedbackReportContent = document.getElementById('feedback-report-content');
+    
+    // Show loading state
+    feedbackReportContent.innerHTML = `
+      <div class="loading-state">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Generating feedback report...</p>
+      </div>
+    `;
+    
+    try {
+      // Build query parameters
+      let queryParams = [];
+      if (startDate) queryParams.push(`startDate=${startDate}`);
+      if (endDate) queryParams.push(`endDate=${endDate}`);
+      if (ratingFilter) {
+        queryParams.push(`minRating=${ratingFilter}`);
+        queryParams.push(`maxRating=${ratingFilter}`);
+      }
+      
+      const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+      
+      // Fetch report data
+      const response = await fetch(`${API_ENDPOINTS.feedbackReport}${queryString}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${Auth.getToken()}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch feedback data');
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Error generating feedback report');
+      }
+      
+      reportData = data.data;
+      
+      // Render the feedback report
+      renderFeedbackReport(reportData);
+    } catch (error) {
+      console.error('Error generating feedback report:', error);
+      feedbackReportContent.innerHTML = `
+        <div class="error-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Failed to generate feedback report. Please try again.</p>
+        </div>
+      `;
+    }
+  };
+  
+  // Render feedback report
+  const renderFeedbackReport = (data) => {
+    const feedbackReportContent = document.getElementById('feedback-report-content');
+    
+    // Check if we have any feedback
+    if (data.totalFeedback === 0) {
+      feedbackReportContent.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-star"></i>
+          <p>No feedback found for the selected criteria</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Create rating stars HTML
+    const renderStars = (rating) => {
+      let starsHtml = '';
+      for (let i = 1; i <= 5; i++) {
+        if (i <= rating) {
+          starsHtml += '<i class="fas fa-star text-warning"></i>';
+        } else {
+          starsHtml += '<i class="far fa-star"></i>';
+        }
+      }
+      return starsHtml;
+    };
+    
+    // Create HTML for the summary section
+    let html = `
+      <div class="report-summary">
+        <div class="summary-card">
+          <div class="summary-title">Total Feedback</div>
+          <div class="summary-value">${data.totalFeedback}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-title">Average Rating</div>
+          <div class="summary-value">
+            ${renderStars(Math.round(data.averageRating))}
+            <span class="ml-2">${data.averageRating.toFixed(1)}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="rating-distribution">
+        <h3>Rating Distribution</h3>
+        <div class="rating-bars">
+    `;
+    
+    // Add rating distribution bars
+    for (let i = 5; i >= 1; i--) {
+      const count = data.ratingCounts[i] || 0;
+      const percent = data.ratingPercentages[i] || 0;
+      
+      html += `
+        <div class="rating-bar-container">
+          <div class="rating-label">${i} ${i === 1 ? 'Star' : 'Stars'}</div>
+          <div class="rating-bar">
+            <div class="rating-bar-fill" style="width: ${percent}%"></div>
+          </div>
+          <div class="rating-count">${count} (${percent.toFixed(1)}%)</div>
+        </div>
+      `;
+    }
+    
+    html += `
+        </div>
+      </div>
+      
+      <div class="feedback-list">
+        <h3>Customer Feedback</h3>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Rating</th>
+                <th>Comment</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    // Add each feedback entry
+    data.recentFeedback.forEach(feedback => {
+      const date = new Date(feedback.date).toLocaleDateString();
+      
+      html += `
+        <tr>
+          <td>${date}</td>
+          <td>${feedback.order.orderNumber}</td>
+          <td>${feedback.customer.name}</td>
+          <td>${renderStars(feedback.rating)}</td>
+          <td>${feedback.comment || 'No comment provided'}</td>
+        </tr>
+      `;
+    });
+    
+    html += `
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    
+    feedbackReportContent.innerHTML = html;
   };
   
   // Export public methods

@@ -544,23 +544,32 @@ const Customer = (() => {
     });
   };
   
-  // Place order function
+  // Place order
   const placeOrder = async () => {
-    if (selectedItems.length === 0) {
-      UI.showNotification('Please add at least one item to your order', 'error');
-      return;
-    }
-    
     try {
-      const notes = document.getElementById('order-notes').value;
+      if (selectedItems.length === 0) {
+        UI.showNotification('Please add items to your order', 'error');
+        return;
+      }
       
-      // Format items for the API
-      const orderItems = selectedItems.map(item => ({
-        item: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity
-      }));
+      // Validate quantities
+      for (const item of selectedItems) {
+        if (item.quantity < 1) {
+          UI.showNotification(`Invalid quantity for ${item.name}`, 'error');
+          return;
+        }
+      }
+      
+      const orderData = {
+        items: selectedItems.map(item => ({
+          item: item.id,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        notes: document.getElementById('order-notes').value || ''
+      };
+      
+      console.log('Sending order data:', orderData);
       
       const response = await fetch(API_ENDPOINTS.customerOrders, {
         method: 'POST',
@@ -568,19 +577,24 @@ const Customer = (() => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${Auth.getToken()}`
         },
-        body: JSON.stringify({
-          items: orderItems,
-          notes
-        })
+        body: JSON.stringify(orderData)
       });
       
       const data = await response.json();
       
       if (data.success) {
-        // Clear selected items
+        // Clear order items
         selectedItems = [];
+        updateOrderSummary();
         
-        UI.showNotification('Your order has been placed successfully!', 'success');
+        // Show success message
+        UI.showNotification('Order placed successfully!', 'success');
+        
+        // Reload recent orders
+        fetchDashboardData();
+        
+        // Clear notes
+        document.getElementById('order-notes').value = '';
         
         // Navigate to orders page
         setTimeout(() => {
@@ -592,7 +606,7 @@ const Customer = (() => {
       }
     } catch (error) {
       console.error('Error placing order:', error);
-      UI.showNotification('Failed to place order. Please try again later.', 'error');
+      UI.showNotification('Failed to place order. Please try again.', 'error');
     }
   };
   

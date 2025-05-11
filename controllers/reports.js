@@ -1,6 +1,8 @@
 const Order = require('../models/Order');
 const Expense = require('../models/Expense');
 const Item = require('../models/Item');
+const Feedback = require('../models/Feedback');
+const User = require('../models/User');
 
 // @desc    Get daily sales and expenses report
 // @route   GET /api/reports/daily
@@ -353,6 +355,92 @@ exports.getDashboardSummary = async (req, res) => {
       }
     });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get customer feedback report
+// @route   GET /api/reports/feedback
+// @access  Private (Admin and Staff only)
+exports.getFeedbackReport = async (req, res) => {
+  try {
+    // Query parameters for filtering
+    const { startDate, endDate, minRating, maxRating } = req.query;
+    
+    // Build query object
+    const query = {};
+    
+    // Apply date filter if provided
+    if (startDate && endDate) {
+      query.date = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+    
+    // Apply rating filter if provided
+    if (minRating || maxRating) {
+      query.rating = {};
+      if (minRating) query.rating.$gte = parseInt(minRating);
+      if (maxRating) query.rating.$lte = parseInt(maxRating);
+    }
+    
+    // Get feedback with populated order and customer details
+    const feedback = await Feedback.find(query)
+      .populate({
+        path: 'order',
+        select: 'orderNumber orderDate totalAmount status'
+      })
+      .populate({
+        path: 'customer',
+        select: 'name email'
+      })
+      .sort({ date: -1 });
+    
+    // Calculate average rating
+    const totalRatings = feedback.length;
+    const averageRating = totalRatings > 0 
+      ? feedback.reduce((sum, item) => sum + item.rating, 0) / totalRatings 
+      : 0;
+    
+    // Count ratings by score (1-5)
+    const ratingCounts = {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0
+    };
+    
+    feedback.forEach(item => {
+      ratingCounts[item.rating] += 1;
+    });
+    
+    // Calculate percentage for each rating
+    const ratingPercentages = {};
+    Object.keys(ratingCounts).forEach(rating => {
+      ratingPercentages[rating] = totalRatings > 0 
+        ? (ratingCounts[rating] / totalRatings) * 100 
+        : 0;
+    });
+    
+    // Return feedback data
+    res.status(200).json({
+      success: true,
+      data: {
+        totalFeedback: totalRatings,
+        averageRating,
+        ratingCounts,
+        ratingPercentages,
+        recentFeedback: feedback
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching feedback report:', error);
     res.status(500).json({
       success: false,
       message: 'Server Error',

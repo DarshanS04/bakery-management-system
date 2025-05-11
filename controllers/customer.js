@@ -141,7 +141,11 @@ exports.getOrderDetails = async (req, res) => {
 // @route   POST /api/customer/orders
 // @access  Private (Customer only)
 exports.createOrder = async (req, res) => {
+  let session;
+  
   try {
+    console.log('Creating order with data:', req.body);
+    
     const customer = await User.findById(req.user.id);
     
     if (!customer || customer.role !== 'customer') {
@@ -161,11 +165,14 @@ exports.createOrder = async (req, res) => {
       });
     }
     
-    // Calculate total amount
+    // Calculate total amount and validate stock
     let totalAmount = 0;
+    const orderItems = [];
     
     // Check stock and calculate total
     for (const orderItem of items) {
+      console.log('Processing item:', orderItem);
+      
       const item = await Item.findById(orderItem.item);
       
       if (!item) {
@@ -179,7 +186,7 @@ exports.createOrder = async (req, res) => {
       if (item.stockQuantity < orderItem.quantity) {
         return res.status(400).json({
           success: false,
-          message: `Not enough stock for ${item.name}`
+          message: `Not enough stock for ${item.name}. Available: ${item.stockQuantity}`
         });
       }
       
@@ -192,8 +199,14 @@ exports.createOrder = async (req, res) => {
       const subtotal = orderItem.price * orderItem.quantity;
       totalAmount += subtotal;
       
-      // Update stock (handled by admin functions, we don't do this directly)
-      // Stock will be updated in the orders controller
+      // Add to order items array
+      orderItems.push({
+        item: item._id,
+        name: item.name,
+        price: orderItem.price,
+        quantity: orderItem.quantity,
+        subtotal
+      });
     }
     
     // Create order with all necessary fields
@@ -203,38 +216,103 @@ exports.createOrder = async (req, res) => {
         id: customer._id,
         name: customer.name,
         email: customer.email,
-        phone: customer.phone,
-        address: customer.address
+        phone: customer.phone || '',
+        address: customer.address || ''
       },
-      items,
+      items: orderItems,
       totalAmount,
-      notes,
+      notes: notes || '',
       status: 'Pending',
       paymentStatus: 'Pending',
-      orderDate: Date.now()
+      paymentMethod: 'Cash', // Default payment method
+      orderDate: Date.now(),
+      createdBy: customer._id
     };
     
-    // Create the order
-    const order = await Order.create(orderData);
+    console.log('Order data prepared:', orderData);
     
-    // Reduce stock for each item
-    for (const orderItem of items) {
-      await Item.findByIdAndUpdate(
-        orderItem.item,
-        { $inc: { stockQuantity: -orderItem.quantity } }
-      );
+    // Try to use transactions if possible
+    try {
+      session = await Order.startSession();
+      session.startTransaction();
+      
+      // Create the order
+      const order = await Order.create([orderData], { session });
+      console.log('Order created:', order);
+      
+      // Update stock for each item
+      for (const orderItem of orderItems) {
+        const updatedItem = await Item.findByIdAndUpdate(
+          orderItem.item,
+          { $inc: { stockQuantity: -orderItem.quantity } },
+          { session, new: true }
+        );
+        console.log('Updated item stock:', updatedItem);
+      }
+      
+      // Commit the transaction
+      await session.commitTransaction();
+      
+      res.status(201).json({
+        success: true,
+        data: order[0]
+      });
+    } catch (txError) {
+      // If an error occurred in transaction
+      console.error('Transaction error:', txError);
+      
+      if (session) {
+        try {
+          await session.abortTransaction();
+        } catch (abortError) {
+          console.error('Error aborting transaction:', abortError);
+        }
+      }
+      
+      // Try non-transactional approach as fallback
+      console.log('Attempting non-transactional order creation as fallback...');
+      
+      // Create order without transaction
+      const order = await Order.create(orderData);
+      console.log('Order created without transaction:', order);
+      
+      // Update stock for each item without transaction
+      for (const orderItem of orderItems) {
+        const updatedItem = await Item.findByIdAndUpdate(
+          orderItem.item,
+          { $inc: { stockQuantity: -orderItem.quantity } },
+          { new: true }
+        );
+        console.log('Updated item stock without transaction:', updatedItem);
+      }
+      
+      res.status(201).json({
+        success: true,
+        data: order
+      });
+    } finally {
+      if (session) {
+        session.endSession();
+      }
+    }
+  } catch (error) {
+    console.error('Error creating order:', error);
+    console.error('Error stack:', error.stack);
+    
+    // Ensure session is ended if exists
+    if (session) {
+      try {
+        session.endSession();
+      } catch (sessionError) {
+        console.error('Error ending session:', sessionError);
+      }
     }
     
-    res.status(201).json({
-      success: true,
-      data: order
-    });
-  } catch (error) {
-    console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server Error',
-      error: error.message
+      message: 'Failed to create order',
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

@@ -3,15 +3,17 @@ const {
   getDailyReport, 
   getDateRangeReport, 
   getInventoryReport, 
-  getDashboardSummary 
+  getDashboardSummary,
+  getFeedbackReport
 } = require('../controllers/reports');
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/daily', protect, getDailyReport);
-router.get('/range', protect, getDateRangeReport);
-router.get('/inventory', protect, getInventoryReport);
-router.get('/dashboard', protect, getDashboardSummary);
+router.get('/daily', protect, authorize('admin', 'staff'), getDailyReport);
+router.get('/range', protect, authorize('admin', 'staff'), getDateRangeReport);
+router.get('/inventory', protect, authorize('admin', 'staff'), getInventoryReport);
+router.get('/dashboard', protect, authorize('admin', 'staff'), getDashboardSummary);
+router.get('/feedback', protect, authorize('admin', 'staff'), getFeedbackReport);
 
 module.exports = router; 

@@ -11,9 +11,17 @@ const OrderSchema = new mongoose.Schema({
     }
   },
   customer: {
+    id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Please provide a customer ID']
+    },
     name: {
       type: String,
       required: [true, 'Please provide a customer name']
+    },
+    email: {
+      type: String
     },
     phone: {
       type: String
@@ -76,6 +84,10 @@ const OrderSchema = new mongoose.Schema({
   },
   notes: {
     type: String
+  },
+  feedback: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Feedback'
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
